@@ -35,25 +35,26 @@ authors:
 ## Summary
 
 Tektoncd/Pipeline currently allows custom task to be referenced in pipeline
-resource specification file using `taskRef`[https://github.com/tektoncd/community/blob/main/teps/0002-custom-tasks.md]. That feature allows a custom task to be submitted to kubernetes along
-the submission of the Tektoncd/pipeline[https://github.com/tektoncd/pipeline],
+resource specification file using [`taskRef`](https://github.com/tektoncd/community/blob/main/teps/0002-custom-tasks.md). That feature allows a custom task to be submitted to kubernetes along
+the submission of the [Tektoncd/pipeline](https://github.com/tektoncd/pipeline),
 however, the submission of a custom task is a separate request to Kubernetes.
 If multiple custom tasks use same name, to both Kubernetes and Tektoncd/Pipeline,
 they will be treated as the same task, this behavior can have unintended
 consequences when Tektoncd/Pipeline gets used as a backend with multiple users.
-This problem becomes even greater when new uesrs follow documents such as
+This problem becomes even greater when new users follow documents such as
 `Get started` which often use same name for task and pipeline. In this environment
 multiple users will step on each other's toes, and produced unintended results.
 
 ## Motivation
 
-It is natual for a user to follow ways such as a Kubernetes Deployment[https://kubernetes.io/docs/concepts/workloads/controllers/deployment/], ReplicaSet, StatefulSet and also
+It is natural for a user to follow ways such as a [Kubernetes Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), ReplicaSet, StatefulSet and also
 Tektoncd/Pipeline taskSpec to have a Pipeline with custom tasks embedded.
 Currently TektonCD/Pipeline supports task specifications to be embedded in
-a pipeline for none-custom-task, but not for custome task. If Tektoncd/Pipeline
+a pipeline for none-custom-task, but not for custom task. If Tektoncd/Pipeline
 also allows a custom task specification to be embedded in a pipeline specification
-then the behavior will be unified with non custom task and there wont be
+then the behavior will be unified with non custom task and there won't be
 any issues in terms of naming conflict when used by multiple users.
+See issue [tektoncd/pipeline#3682](https://github.com/tektoncd/pipeline/issues/3682)
 
 ### Goals
 
@@ -80,6 +81,12 @@ Cluster Admin? etc...) and experience (what workflows or actions are enhanced
 if this problem is solved?).
 -->
 
+- Users can put all the information in one pipelineRun CR.
+- Users don't have to manage the custom task CR. Since custom task CR is
+namespace scope. Currently if there are multiple users in the same namespace, they
+will have conflicts when they are using the same name for their custom task CR.
+
+
 ## Requirements
 
 <!--
@@ -87,6 +94,9 @@ Describe constraints on the solution that must be met. Examples might include
 performance characteristics that must be met, specific edge cases that must
 be handled, or user scenarios that will be affected and must be accomodated.
 -->
+
+- The Tekton controller is responsible for creating the custom task CR and
+assign the pipelineRun as the owner reference.
 
 ## Proposal
 
@@ -200,6 +210,9 @@ All code is expected to have adequate tests (eventually with coverage
 expectations).
 -->
 
+We can reuse the custom task e2e tests with the current test controller
+to verify whether the controller can handle the custom task taskSpec.
+
 ## Design Evaluation
 <!--
 How does this proposal affect the reusability, simplicity, flexibility 
@@ -211,6 +224,9 @@ and conformance of Tekton, as described in [design principles](https://github.co
 <!--
 Why should this TEP _not_ be implemented?
 -->
+
+It changes the taskSpec and runSpec API to handle new types, so we need to
+make sure the old API is backward compatible.
 
 ## Alternatives
 
