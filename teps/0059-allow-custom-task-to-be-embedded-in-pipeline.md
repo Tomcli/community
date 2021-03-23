@@ -62,8 +62,7 @@ See issue [tektoncd/pipeline#3682](https://github.com/tektoncd/pipeline/issues/3
 2. Custom task specification verification/validation should be handed
 over to custom task controllers, custom task specification must not be
 validated by Tektoncd/Pipeline validation logic.
-3. Custom task should be submitted to Kubernetes once a task specification
-is determined to be custom task.
+3. Custom taskSpec should be submitted as part of the runSpec.
 
 ### Non-Goals
 
@@ -95,8 +94,8 @@ performance characteristics that must be met, specific edge cases that must
 be handled, or user scenarios that will be affected and must be accomodated.
 -->
 
-- The Tekton controller is responsible for creating the custom task CR and
-assign the pipelineRun as the owner reference.
+- The Tekton controller is responsible for adding the the custom task spec to
+the Run spec. Then it get validate by the custom task controllers.
 
 ## Proposal
 
@@ -156,6 +155,8 @@ How will UX be reviewed and by whom?
 Consider including folks that also work outside the WGs or subproject.
 -->
 
+None
+
 ### User Experience (optional)
 
 <!--
@@ -178,6 +179,8 @@ of Tekton controllers as well as task and pipeline runs?
 Consider which use cases are impacted by this change and what are their
 performance requirements.
 -->
+
+add user exp
 
 ## Design Details
 
@@ -225,9 +228,6 @@ and conformance of Tekton, as described in [design principles](https://github.co
 Why should this TEP _not_ be implemented?
 -->
 
-It changes the taskSpec and runSpec API to handle new types, so we need to
-make sure the old API is backward compatible.
-
 ## Alternatives
 
 <!--
@@ -235,6 +235,8 @@ What other approaches did you consider and why did you rule them out?  These do
 not need to be as detailed as the proposal, but should include enough
 information to express the idea and why it was not acceptable.
 -->
+
+add alternatives
 
 ## Infrastructure Needed (optional)
 
