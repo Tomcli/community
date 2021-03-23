@@ -84,6 +84,10 @@ if this problem is solved?).
 - Users don't have to manage the custom task CR. Since custom task CR is
 namespace scope. Currently if there are multiple users in the same namespace, they
 will have conflicts when they are using the same name for their custom task CR.
+- In KFP, we need all the templates and task spec live in each pipeline. Currently, 
+having all the custom task templates living in the Kubernetes namespace scope means that
+we have to make multiple API calls to Kubernetes in order to get all the pipeline
+information to render in our API/UI. 
 
 
 ## Requirements
@@ -122,24 +126,15 @@ spec:
 
 Use Tektoncd/pipeline webhook to determine if a task is a custom task based
 on above suggestion. Once a task is determined to be a custom task, then the
-specification defined in taskSpec will be used to send a custom resource
-creation request to kubernetes. This requires communication with kubernetes,
-that is, Tektoncd/Pipeline controller will act as a client to kubernetes.
+specification defined in taskSpec will be also used to define the `Run` custom
+resource. This requires the `Run` API also need to be updated with the taskSpec.
 
-Once custom task resource creation is requested by Tektoncd/Pipeline webhook,
-Tektoncd/Pipeline treats the embedded custom task same as a referenced task.
+Once `Run` resource creation is requested by Tektoncd/Pipeline webhook,
+the custom controller should have a webhook to validate if the `Run` has the embedded
+taskSpec and validate the embedded spec. If the spec is valid, then it can be used
+when the custom task is reconciling the `Run` resource.
 
 ### Notes/Caveats (optional)
-
-When custom task spec is invalid, Tektoncd/Pipeline may not know its state
-until the resource creation which will be a behavior compliant with
-recommendation of general Kubernetes operator development guidelines (which says that
-the invalid spec should fail fast, the resource creation should not be attempted),
-of course if Tektoncd/Pipeline webhook decides to wait for the custom task resource
-to be validated, then this problem can be avoided but this requires a new programming
-pattern in Tektoncd/Pipeline, that is, wait for the custom task controller to post
-the custom task resource state at least after the custom task controller validation
-phase, this can potentially makes things complicated.
 
 ### Risks and Mitigations
 
@@ -168,6 +163,14 @@ via CLI, dashboard or a monitoring system.
 Consider including folks that also work on CLI and dashboard.
 -->
 
+With the embedded taskSpec for the custom task, all the Tekton clients
+can create a pipeline or pipelineRun using a single API call to the Kubernetes.
+Also, any system like KFP that mainly executes pipelines won't need to worry
+about managing all the custom task CRs and their versioning.
+
+As mentioned in the motivation, it is natural for a user to follow ways such as a [Kubernetes Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), ReplicaSet, StatefulSet and also
+Tektoncd/Pipeline taskSpec to have a Pipeline with custom tasks embedded.
+
 ### Performance (optional)
 
 <!--
@@ -179,8 +182,6 @@ of Tekton controllers as well as task and pipeline runs?
 Consider which use cases are impacted by this change and what are their
 performance requirements.
 -->
-
-add user exp
 
 ## Design Details
 
@@ -236,7 +237,14 @@ not need to be as detailed as the proposal, but should include enough
 information to express the idea and why it was not acceptable.
 -->
 
-add alternatives
+Currently, we have to make multiple API calls to Kubernetes for creating
+the custom task resources and pipeline definition. Tekton should give options
+to users whether to embed the custom task spec as part of the pipeline similar
+to regular Tekton tasks. 
+
+Alternatively, we can have the `apiVersion` and `kind` embedded in the task
+metadata.annotations or taskSpec. `apiVersion` and `kind` will be used to
+differentiate between the custom task and the regular Tekton task. 
 
 ## Infrastructure Needed (optional)
 
