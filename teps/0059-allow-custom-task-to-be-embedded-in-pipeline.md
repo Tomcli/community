@@ -2,10 +2,11 @@
 status: proposed
 title: Allow custom task to be embedded in pipeline
 creation-date: '2021-03-18'
-last-updated: '2021-03-18'
+last-updated: '2021-03-23'
 authors:
-- '@Tommy Li'
-- '@Tong Li'
+- '@Tomcli'
+- '@litong01'
+- '@ScrapCodes'
 ---
 
 # TEP-0059: Allow custom task to be embedded in pipeline
