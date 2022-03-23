@@ -176,6 +176,12 @@ if this problem is solved?).
 
 2. Secondly, environment variables defined in steps can be easily overwritten by the ones from `PipelineRun` and `TaskRun`.
   With that, common settings like API keys, connection details, ... can be optionally overwritten in a single place.
+  
+3. For Cloud Providers, it's very common to inject user credentials using Kubernetes API `valueFrom` to avoid credentials
+   being exposed to the PodSpec. Since each cloud provider has different credential format, able to assign environment 
+   variables at the `PipelineRun` and `TaskRun` can reuse the same task with different Cloud Provider credentials.
+   Kubernetes API `valueFrom` can also refe to values in the pod labels/annotations for specific Kubernetes cluster
+   information such as namespace, application labels, and service annotations.
 
 ## Requirements
 
