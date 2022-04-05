@@ -124,9 +124,11 @@ demonstrate the interest in a TEP within the wider Tekton community.
 -->
 
 One of the most important motivators for this feature is the ability to eliminate redundant code from
-the `PipelineRun` as well as `TaskRun` specification.
+the `PipelineRun` as well as `TaskRun` specification. On average this can reduce 3-5 lines of yaml per
+each environment variable per each task in the pipeline.
 In case of complex pipelines, which consist of dozen or even hundreds of tasks, any kind of repetition
-significantly impacts the final size of `PipelineRun` and leads to resource exhaustion.
+significantly impacts the final size of `PipelineRun` and leads to resource exhaustion on the
+Kubernetes ETCD limitation. 
 
 Besides, users quite frequently are willing to overwrite environment variable values
 specified in a `stepTemplate` in the single place when running pipelines.
@@ -169,9 +171,10 @@ if this problem is solved?).
 -->
 
 1. In the first case, common environment variables can be defined in a single place on a `PipelineRun` level.
-   Values can be specified as literals or through references.
+   Values can be specified as literals or through Kubernetes references.
    Variables defined on a `PipelineRun` or `TaskRun` level are then available in all steps.
-   That allows to significantly reduce the size of `PipelineRun` and `TaskRun` resource,
+   That allows to simplify the Tekton run resource configuration and significantly reduce the size of
+   `PipelineRun` and `TaskRun` resource,
    by excluding the common environment variables like: static global settings, common values coming from metadata, ...
 
 2. Secondly, environment variables defined in steps can be easily overwritten by the ones from `PipelineRun` and `TaskRun`.
@@ -263,6 +266,40 @@ spec:
         value: "Overwritten message"
 ```
 
+Similarly, environment variables defined in steps can be easily overwritten by the ones from a `PipelineRun`, e.g.:
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mytask
+  namespace: default
+spec:
+  steps:
+    - name: echo-msg
+      image: ubuntu
+      command: ["bash", "-c"]
+      args: ["echo $MSG"]
+      envs:
+      - name: "MSG"
+        value: "Default message"
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: sum-three-pipeline-run
+  namespace: default
+spec:
+  pipelineSpec:
+    tasks:
+      - name: mytaskrun
+        taskRef:
+          name: mytask
+  podTemplate:
+    envs:
+      - name: "MSG"
+        value: "Overwritten message"
+```
+
 ### Notes/Caveats (optional)
 
 <!--
@@ -287,7 +324,9 @@ Consider including folks that also work outside the WGs or subproject.
 -->
 
 In case of some environment variables are not allowed to change, it can have
-a feature flag to opt-in with this new feature.
+a feature flag to opt-in with this new feature. Similar to the alpha API feature flag,
+we can let the validation webhook fail with an error message when the feature flag is
+disabled. The default behavior can change after 9 months of the Tekton release cycles.
 
 ### User Experience (optional)
 
