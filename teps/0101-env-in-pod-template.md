@@ -278,15 +278,19 @@ spec:
     - name: echo-msg
       image: ubuntu
       command: ["bash", "-c"]
-      args: ["echo $MSG"]
+      args: ["echo $MSG $SECRET_PASSWORD $NAMESPACE"]
       envs:
       - name: "MSG"
         value: "Default message"
+      - name: "SECRET_PASSWORD"
+        value: "Default secret password"
+      - name: "NAMESPACE"
+        value: "tekton-pipelines"
 ---
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: sum-three-pipeline-run
+  name: one-task-pipeline-run
   namespace: default
 spec:
   pipelineSpec:
@@ -298,6 +302,44 @@ spec:
     envs:
       - name: "MSG"
         value: "Overwritten message"
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: three-task-pipeline-run
+  namespace: default
+spec:
+  pipelineSpec:
+    tasks:
+      - name: mytaskrun
+        taskRef:
+          name: mytask
+      - name: mytaskrun2
+        taskRef:
+          name: mytask
+        runAfter:
+          - mytaskrun
+      - name: mytaskrun3
+        taskRef:
+          name: mytask
+        runAfter:
+          - mytaskrun2
+  podTemplate:
+    envs:
+      - name: "MSG"
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['messages']
+      - name: "SECRET_PASSWORD"
+        valueFrom:
+          secretKeyRef:
+            name: mysecret
+            key: password
+            optional: false
+      - name: "NAMESPACE"
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
 ```
 
 ### Notes/Caveats (optional)
