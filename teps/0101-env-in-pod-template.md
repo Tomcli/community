@@ -151,6 +151,9 @@ know that this has succeeded?
 
 2. Environment variables defined in the Pod template at `TaskRun` and `PipelineRun` level
    take precedence over ones defined in steps and `stepTemplate`.
+   
+3. Allow cluster admin to define a list of cluster-wide forbidden environment variables so that users won't overwritten
+   important Tekton environment variables such as "HTTP_PROXY".
 
 ### Non-Goals
 
@@ -204,6 +207,10 @@ be handled, or user scenarios that will be affected and must be accomodated.
   With that, common settings like API keys, connection details, ... can be optionally overwritten in a single place. For
   example, if both `PipelineRun` and task `StepTemplate` has environment variables PROXY, it will overwrite the task
   `StepTemplate` with the environment variable values inside `PipelineRun`.
+  
+3. Allow cluster admin to define a list of cluster-wide forbidden environment variables in the Tekton `config-defaults` 
+   configmap. When users define environment variables in the Taskrun and Pipelinerun spec, check the list of forbidden
+   environment variables and throw out a validation error if any of the environment variables is forbidden. 
 
 ## Proposal
 
@@ -437,6 +444,57 @@ spec:
         runAfter:
           - mytaskrun2
 ```
+
+Another use case is where admin can define a list of immutable environment variables in the cluster-wide configmap.
+Then, the podTemplate will not replace any variable in the Tekon cluster-wide configmap.
+
+Tekton configmap
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-defaults
+  namespace: tekton-pipelines
+  labels:
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipelines
+data:
+  default-pod-template-rules: | {
+    "forbidden-env-variables" : ["HTTP_PROXY"]
+  }
+```
+
+Tekton pipelinerun
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mytask
+  namespace: default
+spec:
+  steps:
+    - name: echo-msg
+      image: ubuntu
+      command: ["bash", "-c"]
+      args: ["echo $HTTP_PROXY"]
+---
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: mytaskrun
+  namespace: default
+spec:
+  taskRef:
+    name: mytask
+  podTemplate:
+    envs:
+      - name: "HTTP_PROXY"
+        value: "8080"
+```
+
+The above pipeline will return "HTTP_PROXY" is not a valid environment variable to define in the podTemplate.
+List of forbidden environment variables are located at the "config-defaults" configmap at the Tekton controller
+namespace.
 
 ### Notes/Caveats (optional)
 
