@@ -153,7 +153,8 @@ know that this has succeeded?
    take precedence over ones defined in steps and `stepTemplate`.
    
 3. Allow cluster admin to define a list of cluster-wide forbidden environment variables so that users won't overwritten
-   important Tekton environment variables such as "HTTP_PROXY".
+   important Tekton environment variables such as "HTTP_PROXY". Default cluster-wide environment variables can also be
+   set in the default pod template settings at the [config-defaults.yaml](https://github.com/tektoncd/pipeline/blob/76e40b5a7b11262bfaa96ae31f28db2009002115/config/config-defaults.yaml#L57).
 
 ### Non-Goals
 
@@ -211,6 +212,14 @@ be handled, or user scenarios that will be affected and must be accomodated.
 3. Allow cluster admin to define a list of cluster-wide forbidden environment variables in the Tekton `config-defaults` 
    configmap. When users define environment variables in the Taskrun and Pipelinerun spec, check the list of forbidden
    environment variables and throw out a validation error if any of the environment variables is forbidden. 
+   
+4. Since there are many places that can define the environment variables with this feature, the precedence order is
+   a. Global Level Forbidden Environment Variables
+   b. Global Level Default Environment Variables in Tekton Default Pod Template
+   c. PipelineRun Level Environment Variables in PipelineRun Pod Template
+   d. TaskRun Level Environment Variables in TaskRun Pod Template
+   e. Task Level Environment Variables in Task Step Template
+   f. Step Level Environment Variables in Step Container Spec
 
 ## Proposal
 
@@ -462,6 +471,10 @@ data:
   default-pod-template-rules: | {
     "forbidden-env-variables" : ["HTTP_PROXY"]
   }
+  default-pod-template: | 
+    envs:
+    - name: "MSG"
+      value: "Default message"
 ```
 
 Tekton pipelinerun
@@ -494,7 +507,8 @@ spec:
 
 The above pipeline will return "HTTP_PROXY" is not a valid environment variable to define in the podTemplate.
 List of forbidden environment variables are located at the "config-defaults" configmap at the Tekton controller
-namespace.
+namespace. All the tasks will have the default "MSG" environment variable in their step since it's set as part
+of the global default pod template.
 
 ### Notes/Caveats (optional)
 
