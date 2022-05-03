@@ -51,6 +51,7 @@ orgs:
     - chetan-rns
     - chmouel
     - chuangw6
+    - chitrangpatel
     - crshnburn
     - concaf
     - danielhelfand
@@ -214,6 +215,7 @@ orgs:
         - hrishin
         - danielhelfand
         - pradeepitm12
+        - vinamra28
         privacy: closed
         repos:
           cli: write
@@ -230,6 +232,7 @@ orgs:
         - dlorenc
         - dibyom
         - jerop
+        - lbernick
         privacy: closed
         repos:
           pipeline: write
@@ -526,6 +529,7 @@ orgs:
         members:
         - carlos-logro
         - chuangw6
+        - chitrangpatel
         - sthaha
         - iancoffey
         - a-roberts
