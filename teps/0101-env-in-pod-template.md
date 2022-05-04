@@ -189,6 +189,9 @@ if this problem is solved?).
    variables at the `PipelineRun` and `TaskRun` can reuse the same task with different Cloud Provider credentials.
    Kubernetes API `valueFrom` can also refe to values in the pod labels/annotations for specific Kubernetes cluster
    information such as namespace, application labels, and service annotations.
+   
+4. Allow users to reuse stock Tekton catalogs on different cloud environment by setting up a cloud specific global container
+   spec.
 
 ## Requirements
 
