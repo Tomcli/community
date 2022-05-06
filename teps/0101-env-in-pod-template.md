@@ -619,6 +619,8 @@ not need to be as detailed as the proposal, but should include enough
 information to express the idea and why it was not acceptable.
 -->
 
+Define with a Top-level environment variable field. This new top-level field will be under the pipelinerun/taskrun spec level. Since the requirements also need to support Kubernetes value references such as secret, configmap, and Kubernetes downstream API, the type for this new spec will be an array of Kubernetes container V1 environment variable types.
+
 ## Infrastructure Needed (optional)
 
 <!--
